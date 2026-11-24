@@ -19,27 +19,8 @@
 - 📱 **Cross-platform** — responsive dark-mode UI for mobile and desktop
 - 🧹 **Privacy controls** — clear session memory and cached model data
 
-## 🚀 Quick Start
-
-### Option 1: Deploy to Netlify
-1. Drag the project folder to [Netlify Drop](https://app.netlify.com/drop)
-2. Done! The app will serve with correct COOP/COEP headers via `netlify.toml`
-
-### Option 2: Deploy to GitHub Pages
-1. Push this repo to GitHub
-2. Enable Pages in repo Settings → Pages → Source: `main` branch, `/` root
-3. Add `_headers` file for proper CORS headers (may need a Cloudflare proxy for COOP/COEP)
-
-### Option 3: Local Development
-```bash
-# Any static file server with proper headers works
-npx serve . --cors
-
-# Or use Python
-python -m http.server 8080
-```
-
-> **Note:** For SharedArrayBuffer support (better WASM performance), you need COOP/COEP headers. The app works without them but may be slower.
+Link to Access
+https://privatemirage.netlify.app/
 
 ## 📁 Project Structure
 
