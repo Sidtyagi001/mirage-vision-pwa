@@ -1,0 +1,21 @@
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  X-Content-Type-Options: nosniff
+
+/*.wasm
+  Content-Type: application/wasm
+  Cache-Control: public, max-age=31536000, immutable
+  Cross-Origin-Resource-Policy: cross-origin
+
+/*.cact
+  Content-Type: application/octet-stream
+  Cache-Control: public, max-age=31536000, immutable
+  Cross-Origin-Resource-Policy: cross-origin
+
+/*.js
+  Cache-Control: public, max-age=3600
+  Cross-Origin-Resource-Policy: cross-origin
+
+/sw.js
+  Cache-Control: no-cache, no-store

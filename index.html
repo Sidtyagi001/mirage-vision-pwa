@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="description" content="Private, offline AI vision — Mirage runs 100% in your browser via WebAssembly.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Mirage Vision — Private On-Device AI</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌵</text></svg>">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ═══════════ Top Bar ═══════════ -->
+  <header id="topbar">
+    <div class="topbar-left">
+      <span class="logo">🌵</span>
+      <h1>Mirage Vision</h1>
+    </div>
+    <div class="topbar-right">
+      <span id="status-badge" class="badge badge-loading">Loading…</span>
+      <button id="btn-settings" class="icon-btn" title="Settings" aria-label="Settings">⚙️</button>
+    </div>
+  </header>
+
+  <!-- ═══════════ Download / Init Progress ═══════════ -->
+  <section id="init-overlay" class="overlay">
+    <div class="overlay-card">
+      <h2>Preparing Mirage Engine</h2>
+      <p id="init-status">Initializing…</p>
+      <div class="progress-wrap">
+        <div id="init-progress" class="progress-bar" style="width:0%"></div>
+      </div>
+      <p id="init-detail" class="detail"></p>
+      <div id="init-error" class="error-box" hidden>
+        <p id="init-error-msg"></p>
+        <label class="fallback-label">
+          Or drop local files into <code>/public/models/</code> and
+          <button id="btn-retry" class="btn btn-sm">Retry</button>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ Main Content ═══════════ -->
+  <main id="main-content" hidden>
+    <!-- Input Tabs -->
+    <div class="tab-bar">
+      <button class="tab active" data-tab="upload">📁 Upload</button>
+      <button class="tab" data-tab="camera">📷 Camera</button>
+    </div>
+
+    <!-- Upload Panel -->
+    <section id="panel-upload" class="panel">
+      <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Drop or click to upload image">
+        <div class="drop-zone-inner">
+          <span class="drop-icon">🖼️</span>
+          <p>Drag & drop an image here</p>
+          <p class="sub">or click to browse · JPG, PNG, WebP</p>
+        </div>
+        <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" hidden>
+      </div>
+    </section>
+
+    <!-- Camera Panel -->
+    <section id="panel-camera" class="panel" hidden>
+      <div class="camera-wrap">
+        <video id="camera-video" autoplay playsinline muted></video>
+        <canvas id="camera-snap" hidden></canvas>
+        <div class="camera-controls">
+          <button id="btn-flip" class="btn btn-icon" title="Flip Camera">🔄</button>
+          <button id="btn-capture" class="btn btn-primary btn-round" title="Capture">📸</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Preview + Results -->
+    <section id="results-section" hidden>
+      <div class="preview-wrap">
+        <canvas id="preview-canvas"></canvas>
+        <div id="inference-timer" class="timer-badge" hidden></div>
+      </div>
+
+      <div id="results-cards">
+        <!-- Scene Description -->
+        <div class="result-card" id="card-scene" hidden>
+          <h3>🏞️ Scene Description</h3>
+          <p id="scene-text"></p>
+        </div>
+
+        <!-- Detected Objects -->
+        <div class="result-card" id="card-objects" hidden>
+          <h3>📦 Detected Objects</h3>
+          <div id="objects-list" class="chip-list"></div>
+        </div>
+
+        <!-- OCR Text -->
+        <div class="result-card" id="card-ocr" hidden>
+          <h3>📝 Extracted Text (OCR)</h3>
+          <pre id="ocr-text"></pre>
+        </div>
+
+        <!-- Raw JSON (collapsible) -->
+        <details class="result-card" id="card-raw" hidden>
+          <summary>🔍 Raw JSON Output</summary>
+          <pre id="raw-json"></pre>
+        </details>
+      </div>
+
+      <div class="action-row">
+        <button id="btn-clear" class="btn btn-outline">🗑️ Clear Session</button>
+        <button id="btn-new" class="btn btn-primary">➕ New Image</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ═══════════ Settings Modal ═══════════ -->
+  <div id="settings-modal" class="modal" hidden>
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <h2>Settings</h2>
+      <div class="setting-row">
+        <span>Clear cached model (~22 MB)</span>
+        <button id="btn-clear-cache" class="btn btn-danger btn-sm">Clear Cache</button>
+      </div>
+      <div class="setting-row">
+        <span>Wipe all session memory</span>
+        <button id="btn-wipe" class="btn btn-outline btn-sm">Wipe Memory</button>
+      </div>
+      <div class="setting-row">
+        <label>
+          <input type="checkbox" id="chk-diagnostics"> Show diagnostic log
+        </label>
+      </div>
+      <div id="diagnostic-log" class="diag-log" hidden>
+        <pre id="diag-text"></pre>
+      </div>
+      <button id="btn-close-settings" class="btn btn-primary" style="margin-top:1rem;width:100%">Close</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ Diagnostic Log (floating) ═══════════ -->
+  <div id="diag-panel" class="diag-panel" hidden>
+    <div class="diag-header">
+      <span>Diagnostic Log</span>
+      <button id="btn-close-diag" class="icon-btn">✕</button>
+    </div>
+    <pre id="diag-panel-text" class="diag-log-content"></pre>
+  </div>
+
+  <script src="app.js?v=3" type="module"></script>
+</body>
+</html>
